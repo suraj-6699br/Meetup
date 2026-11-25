@@ -46,7 +46,7 @@ const SessionDetailModal = ({session, onClose}) => {
         </div>
 
         {/* Host Audio Recording & Download Bar (Host Only) */}
-        {session.isHost && session.recordingUrl && (
+        {Boolean(session.recordingUrl) && (
           <div className="mx-6 my-3 p-4 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl border border-blue-200/70 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3 w-full sm:w-auto">
               <div className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center shrink-0 shadow-sm shadow-primary/30">

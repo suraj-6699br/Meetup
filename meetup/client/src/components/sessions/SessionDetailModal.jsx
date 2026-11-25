@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { XIcon, SparklesIcon, FileTextIcon, MessageSquareIcon, UsersIcon, DownloadIcon, MusicIcon } from 'lucide-react'
+import { XIcon, SparklesIcon, FileTextIcon, MessageSquareIcon, UsersIcon, DownloadIcon, MusicIcon, Loader2Icon } from 'lucide-react'
 import SessionChatTab from './SessionChatTab';
 import SessionParticipantsTab from './SessionParticipantsTab';
 import TranscriptTab from './TranscriptTab';
@@ -31,6 +31,21 @@ const SessionDetailModal = ({session, onClose}) => {
               {session.recordingStatus === 'done' && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200/60">
                   <SparklesIcon className="w-2.5 h-2.5" /> AI Summary Ready
+                </span>
+              )}
+              {session.recordingStatus === 'transcribing' && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200/60 animate-pulse">
+                  <Loader2Icon className="w-2.5 h-2.5 animate-spin" /> Transcribing...
+                </span>
+              )}
+              {session.recordingStatus === 'summarizing' && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full border border-purple-200/60 animate-pulse">
+                  <Loader2Icon className="w-2.5 h-2.5 animate-spin" /> Summarizing...
+                </span>
+              )}
+              {(session.recordingStatus === 'processing' || session.recordingStatus === 'uploading') && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200/60 animate-pulse">
+                  <Loader2Icon className="w-2.5 h-2.5 animate-spin" /> Processing Audio...
                 </span>
               )}
             </div>

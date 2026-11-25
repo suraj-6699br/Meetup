@@ -52,6 +52,21 @@ const generateFallbackSummary = (transcriptText) => {
     return `## 📌 Executive Overview\n${preview ? preview.slice(0, 300) + (preview.length > 300 ? "..." : "") : "Meeting audio transcribed and analyzed."}\n\n## 🎯 Key Topics Discussed\n${points || "- Meeting discussion captured across participants."}\n${speakers.length > 0 ? `\n*Active Speakers*: ${speakers.join(", ")}` : ""}\n\n## ✅ Decisions Made\n- Discussions concluded as recorded above.\n\n## 📋 Action Items & Next Steps\n- Review full transcript and audio recording playback for detailed follow-ups.`;
 };
 
+// Models to try in order. If one is busy (503/429/high demand), the next one is used.
+const getModelList = () => {
+    const envModels = (process.env.GEMINI_MODELS || process.env.GEMINI_MODEL || "").trim();
+    if (envModels) {
+        const list = envModels.split(",").map(m => m.trim().replace(/['"]/g, "")).filter(Boolean);
+        for (const fallback of ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.8-flash"]) {
+            if (!list.includes(fallback)) {
+                list.push(fallback);
+            }
+        }
+        return list;
+    }
+    return ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.8-flash"];
+};
+
 export const processRecording = async (req, res) => {
     const { meetingId } = req.params;
     const userId = req.user.id;
@@ -121,10 +136,8 @@ export const processRecording = async (req, res) => {
                     console.warn("[Recording] AWS_* credentials not found in environment.");
                 }
 
-                // Immediately save recordingUrl to DB so host can play & download even if transcription is running
-                if (recordingUrl) {
-                    await sql`UPDATE meetings SET recording_url = ${recordingUrl} WHERE id = ${meeting.id}`;
-                }
+                // Immediately save recordingUrl and set status to 'transcribing' so UI shows audio and progress
+                await sql`UPDATE meetings SET recording_url = ${recordingUrl}, recording_status = 'transcribing' WHERE id = ${meeting.id}`;
 
                 // --- 2. Transcribe Audio with AssemblyAI ---
                 let transcriptText = "";
@@ -167,17 +180,20 @@ export const processRecording = async (req, res) => {
                     transcriptText = "ASSEMBLYAI_API_KEY is not configured on the server.";
                 }
 
-                // --- 3. Generate Structured Meeting Summary with Google Gemini ---
+                // Update database with transcript and transition status to 'summarizing'
+                if (transcriptText) {
+                    await sql`UPDATE meetings SET recording_status = 'summarizing', transcript = ${transcriptText} WHERE id = ${meeting.id}`;
+                }
+
+                // --- 3. Generate Structured Meeting Summary with Google Gemini (Multi-Model Fallback) ---
                 let summaryText = "";
                 const geminiApiKey = (process.env.GEMINI_API_KEY || "").replace(/['"]/g, "").trim();
 
-                if (geminiApiKey && geminiApiKey.startsWith("AIzaSy") && transcriptText && transcriptText.length > 20) {
-                    try {
-                        console.log(`[Recording] Generating summary using Google Gemini (gemini-1.5-flash)...`);
-                        const genAI = new GoogleGenerativeAI(geminiApiKey);
-                        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+                if (geminiApiKey && transcriptText && transcriptText.length > 15 && !transcriptText.includes("Speech transcription encountered an error")) {
+                    const modelList = getModelList();
+                    const genAI = new GoogleGenerativeAI(geminiApiKey);
 
-                        const prompt = `You are an expert AI meeting assistant. Analyze the following meeting transcript (which may be in English, Hindi, Spanish, or multilingual) and provide a professional, structured executive meeting summary in English.
+                    const prompt = `You are an expert AI meeting assistant. Analyze the following meeting transcript (which may be in English, Hindi, Spanish, or multilingual) and provide a professional, structured executive meeting summary in English.
 
 Format your response cleanly with these exact sections:
 
@@ -198,14 +214,23 @@ Meeting Transcript:
 ${transcriptText}
 """`;
 
-                        const result = await model.generateContent(prompt);
-                        summaryText = result.response.text();
-                        console.log(`[Recording] ✅ Gemini summary generated successfully!`);
-                    } catch (geminiErr) {
-                        console.warn("[Recording] Gemini summarization failed, using structured fallback:", geminiErr.message);
-                        summaryText = generateFallbackSummary(transcriptText);
+                    for (const modelName of modelList) {
+                        try {
+                            console.log(`[Recording] Attempting summary generation with model: ${modelName}...`);
+                            const model = genAI.getGenerativeModel({ model: modelName });
+                            const result = await model.generateContent(prompt);
+                            summaryText = result.response.text();
+                            console.log(`[Recording] ✅ Summary generated successfully using ${modelName}!`);
+                            break;
+                        } catch (modelErr) {
+                            console.warn(`[Recording] Model ${modelName} failed, trying next. Reason: ${modelErr.message?.slice(0, 120)}`);
+                        }
                     }
-                } else {
+                }
+
+                // If all Gemini models were busy or failed, fall back to our enhanced structured parser
+                if (!summaryText) {
+                    console.log("[Recording] Gemini unavailable or busy. Using structured fallback meeting summary parser.");
                     summaryText = generateFallbackSummary(transcriptText);
                 }
 

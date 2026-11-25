@@ -15,7 +15,7 @@ const SessionCard = ({ session, onOpenDetails, onRejoin }) => {
                     <span className='text-xs font-mono text-slate-500 font-medium bg-slate-500/5 px-2.5 py-1 rounded-md'>ID: {session.meetingId}</span>
                     {session.recordingStatus === 'done' && (
                         <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-200/60">
-                            <SparklesIcon className="w-2.5 h-2.5" /> AI Summary
+                            <SparklesIcon className="w-2.5 h-2.5" /> AI Summary Ready
                         </span>
                     )}
                     {Boolean(session.recordingUrl) && (
@@ -23,9 +23,19 @@ const SessionCard = ({ session, onOpenDetails, onRejoin }) => {
                             <MusicIcon className="w-2.5 h-2.5" /> MP3 Audio
                         </span>
                     )}
-                    {session.recordingStatus === 'processing' && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200/60">
-                            <Loader2Icon className="w-2.5 h-2.5 animate-spin" /> Processing AI
+                    {session.recordingStatus === 'transcribing' && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200/60 animate-pulse">
+                            <Loader2Icon className="w-2.5 h-2.5 animate-spin" /> Transcribing...
+                        </span>
+                    )}
+                    {session.recordingStatus === 'summarizing' && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full border border-purple-200/60 animate-pulse">
+                            <Loader2Icon className="w-2.5 h-2.5 animate-spin" /> Summarizing...
+                        </span>
+                    )}
+                    {(session.recordingStatus === 'processing' || session.recordingStatus === 'uploading') && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200/60 animate-pulse">
+                            <Loader2Icon className="w-2.5 h-2.5 animate-spin" /> Processing Audio...
                         </span>
                     )}
                 </div>

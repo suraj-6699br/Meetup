@@ -13,13 +13,19 @@ const SummaryTab = ({ summary, recordingStatus }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (recordingStatus === "processing") {
+  if (['processing', 'uploading', 'transcribing', 'summarizing'].includes(recordingStatus)) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
         <Loader2Icon className="w-8 h-8 text-primary animate-spin" />
-        <h3 className="text-base font-medium text-slate-800">Generating AI Summary...</h3>
+        <h3 className="text-base font-medium text-slate-800">
+          {recordingStatus === 'transcribing' ? 'Transcribing Speech...' :
+           recordingStatus === 'summarizing' ? 'Generating Gemini Summary...' :
+           'Processing Audio Recording...'}
+        </h3>
         <p className="text-xs text-slate-500 max-w-sm">
-          Audio is being transcribed and summarized by AI. Check back in a moment!
+          {recordingStatus === 'transcribing' ? 'AssemblyAI is converting speech to text with language detection...' :
+           recordingStatus === 'summarizing' ? 'Google Gemini is synthesizing key topics, decisions, and action items...' :
+           'Audio is being uploaded and prepared for transcription. Check back in a moment!'}
         </p>
       </div>
     );

@@ -19,7 +19,7 @@ const Sessions = () => {
   const { isLoaded, isSignedIn, getToken} = useAuth()
 
   useEffect(()=>{
-    const fetchSessions = async (params) => {
+    const fetchSessions = async () => {
        if (!isLoaded || !isSignedIn) return;
 
        try {
@@ -34,8 +34,39 @@ const Sessions = () => {
        }
     }
     fetchSessions();
-    
   },[isLoaded, isSignedIn, getToken])
+
+  // Auto-refresh sessions when any recording is processing, transcribing, or summarizing
+  const hasPendingProcessing = sessions.some(s =>
+    ['processing', 'uploading', 'transcribing', 'summarizing'].includes(s.recordingStatus)
+  );
+
+  useEffect(() => {
+    if (!hasPendingProcessing || !isLoaded || !isSignedIn) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const token = await getToken();
+        if (!token) return;
+        const res = await api("/api/meetings/sessions", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const updated = res.data.meetings || [];
+        setSessions(updated);
+
+        // If the detail modal is open for a processing session, update it live
+        setSelectedSession(prev => {
+          if (!prev) return null;
+          const fresh = updated.find(m => m.meetingId === prev.meetingId);
+          return fresh ? { ...prev, ...fresh } : prev;
+        });
+      } catch (err) {
+        console.warn("Sessions auto-refresh error:", err);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [hasPendingProcessing, isLoaded, isSignedIn, getToken]);
 
   const openSessionDetails = async (sessionId)=>{
      try {

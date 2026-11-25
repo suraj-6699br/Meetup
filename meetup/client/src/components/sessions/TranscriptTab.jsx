@@ -13,13 +13,17 @@ const TranscriptTab = ({ transcript, recordingStatus }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (recordingStatus === "processing") {
+  if (['processing', 'uploading', 'transcribing'].includes(recordingStatus)) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
         <Loader2Icon className="w-8 h-8 text-primary animate-spin" />
-        <h3 className="text-base font-medium text-slate-800">Processing Audio Transcript...</h3>
+        <h3 className="text-base font-medium text-slate-800">
+          {recordingStatus === 'transcribing' ? 'Transcribing Speech...' : 'Processing Audio Transcript...'}
+        </h3>
         <p className="text-xs text-slate-500 max-w-sm">
-          The meeting audio is currently being transcribed with speech-to-text. Please check back in a moment.
+          {recordingStatus === 'transcribing'
+            ? 'AssemblyAI is converting speech to text with speaker detection. Please wait a moment.'
+            : 'Audio recording is being prepared and uploaded. Please check back in a moment.'}
         </p>
       </div>
     );

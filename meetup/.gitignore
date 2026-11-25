@@ -1,3 +1,6 @@
 node_modules
 .env
 *.pdf
+.neon
+.env.local
+test-neon-storage.mjs

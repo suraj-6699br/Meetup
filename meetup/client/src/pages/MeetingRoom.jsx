@@ -69,14 +69,14 @@ const MeetingRoom = () => {
     navigate('/dashboard')
   },[navigate])
 
+  const hostId = meeting?.host?.id || meeting?.host;
+  const isHost = Boolean(userdata?.id && hostId && hostId.toString() === userdata.id.toString())
+
   // Initialize WebRTC
-  const {localStream, remoteUsers, audioEnabled, videoEnabled, toggleAudio, toggleVideo, endMeeting, muteAll} = useWebRTC(meetingId, userdata, handleMeetingEnded, Boolean(meeting))
+  const {localStream, remoteUsers, audioEnabled, videoEnabled, toggleAudio, toggleVideo, endMeeting, muteAll} = useWebRTC(meetingId, userdata, handleMeetingEnded, Boolean(meeting), isHost)
 
    // Initialize Chat
    const {messages, sendMessage, unreadCount, isChatOpen, toggleChat} = useChat(meetingId, userdata)
-
-  const hostId = meeting?.host?.id || meeting?.host;
-  const isHost = Boolean(userdata?.id && hostId && hostId.toString() === userdata.id.toString())
 
   // Initialize Audio Recording for transcription & AI summary (host only)
   const {
@@ -168,7 +168,7 @@ const MeetingRoom = () => {
           localAudio={audioEnabled}
           localVideo={videoEnabled}
           remoteUsers={remoteUsers}
-          meetingHostId={dummyUser.id}
+          meetingHostId={hostId}
           />
 
           

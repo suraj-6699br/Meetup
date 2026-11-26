@@ -10,7 +10,7 @@ const ICE_SERVERS = {
     ],
 };
 
-export const useWebRTC = (roomId, user, onMeetingEnded, enabled = true) => {
+export const useWebRTC = (roomId, user, onMeetingEnded, enabled = true, isHost = false) => {
     const [localStream, setLocalStream] = useState(null);
     const [remoteUsers, setRemoteUsers] = useState([]); // Array of { socketId, userId, userName, stream, audioEnabled, videoEnabled }
     const [audioEnabled, setAudioEnabled] = useState(true);
@@ -206,6 +206,10 @@ export const useWebRTC = (roomId, user, onMeetingEnded, enabled = true) => {
 
             // 8. Handle being muted by host
             socket.on("muted-by-host", () => {
+                if (isHost) {
+                    // Host should NEVER be muted by mute-all
+                    return;
+                }
                 if (localStreamRef.current) {
                     const audioTrack = localStreamRef.current.getAudioTracks()[0];
                     if (audioTrack) {
@@ -307,6 +311,7 @@ export const useWebRTC = (roomId, user, onMeetingEnded, enabled = true) => {
     const muteAll = useCallback(() => {
         if (roomId) {
             socket.emit("mute-all", { roomId });
+            toast.success("Muted all participants");
         }
     }, [roomId]);
 

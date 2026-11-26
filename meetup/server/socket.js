@@ -182,8 +182,22 @@ export function setupSocketIO(io){
 
         // Host mutes all participants in a room
         socket.on("mute-all", ({ roomId }) => {
-            // Broadcast to all participants EXCEPT the host (socket.to excludes the sender)
-            socket.to(roomId).emit("muted-by-host");
+            if (!roomId || !rooms.has(roomId)) return;
+            const roomParticipants = rooms.get(roomId);
+
+            // Verify the sender is indeed a host
+            const sender = roomParticipants.get(socket.id);
+            if (!sender?.isHost) {
+                console.warn(`[Socket] Non-host user (${sender?.userName || socket.id}) attempted to mute all in room ${roomId}`);
+                return;
+            }
+
+            // Only emit muted-by-host to participants who are NOT hosts
+            for (const [targetSocketId, participant] of roomParticipants.entries()) {
+                if (targetSocketId !== socket.id && !participant.isHost) {
+                    io.to(targetSocketId).emit("muted-by-host");
+                }
+            }
         })
 
         // Handle Disconnect (Reloading window, network drop, or closing tab)

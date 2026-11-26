@@ -40,13 +40,13 @@ const generateFallbackSummary = (transcriptText) => {
     const lines = transcriptText.split("\n").filter(l => l.trim().length > 0);
     const preview = lines.slice(0, 3).map(l => l.replace(/^Speaker [^:]+:\s*/, "")).join(" ");
     
-    // Extract unique speakers
+    
     const speakers = [...new Set(lines.map(l => {
         const match = l.match(/^(Speaker [^:]+):/);
         return match ? match[1] : null;
     }).filter(Boolean))];
 
-    // Pick key conversational points (up to 4 bullet points)
+    
     const points = lines.slice(0, 5).map(l => `- ${l.trim()}`).join("\n");
 
     return `## 📌 Executive Overview\n${preview ? preview.slice(0, 300) + (preview.length > 300 ? "..." : "") : "Meeting audio transcribed and analyzed."}\n\n## 🎯 Key Topics Discussed\n${points || "- Meeting discussion captured across participants."}\n${speakers.length > 0 ? `\n*Active Speakers*: ${speakers.join(", ")}` : ""}\n\n## ✅ Decisions Made\n- Discussions concluded as recorded above.\n\n## 📋 Action Items & Next Steps\n- Review full transcript and audio recording playback for detailed follow-ups.`;

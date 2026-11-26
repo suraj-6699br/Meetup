@@ -1,8 +1,8 @@
-import { CheckIcon, CopyIcon, MessageSquareIcon, MicIcon, MicOffIcon, PauseIcon, PhoneOffIcon, PlayIcon, UsersIcon, VideoIcon, VideoOffIcon } from 'lucide-react'
+import { CheckIcon, CopyIcon, MessageSquareIcon, MicIcon, MicOffIcon, PauseIcon, PhoneOffIcon, PlayIcon, ScreenShare, ScreenShareOff, UsersIcon, VideoIcon, VideoOffIcon } from 'lucide-react'
 import React, { useState } from 'react'
 import toast from 'react-hot-toast'
 
-const ControlBar = ({roomId, audioEnabled, videoEnabled, onToggleAudio, onToggleVideo, onToggleChat, onToggleParticipants, isChatOpen, isParticipantsOpen, unreadCount,participantCount, isHost, onLeave, onEndMeeting, onMuteAll, recordingState = "idle", recordingTime = "00:00", onStartRecording, onPauseRecording}) => {
+const ControlBar = ({roomId, audioEnabled, videoEnabled, onToggleAudio, onToggleVideo, onToggleChat, onToggleParticipants, isChatOpen, isParticipantsOpen, unreadCount,participantCount, isHost, onLeave, onEndMeeting, onMuteAll, isScreenSharing = false, onToggleScreenShare, recordingState = "idle", recordingTime = "00:00", onStartRecording, onPauseRecording}) => {
 
     const [copied, setCopied] = useState(false)
 
@@ -41,6 +41,16 @@ const ControlBar = ({roomId, audioEnabled, videoEnabled, onToggleAudio, onToggle
                 videoEnabled ? "bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 shadow-xs" : "bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200 shadow-xs" }`}
                 title={videoEnabled ? "Turn Off Camera" : "Turn On Camera"}>
                 {videoEnabled ? <VideoIcon className="w-5 h-5" /> : <VideoOffIcon className="w-5 h-5" />}
+            </button>
+
+            {/* Screen Share Toggle */}
+            <button onClick={onToggleScreenShare}
+            className={`p-3.5 rounded-2xl transition-all cursor-pointer border ${
+                isScreenSharing 
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 shadow-md shadow-emerald-500/20" 
+                : "bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 shadow-xs" }`}
+                title={isScreenSharing ? "Stop Sharing Screen" : "Share Your Screen"}>
+                {isScreenSharing ? <ScreenShareOff className="w-5 h-5 text-white animate-pulse" /> : <ScreenShare className="w-5 h-5" />}
             </button>
 
             {/* Chat Toggle */}

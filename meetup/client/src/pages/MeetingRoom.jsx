@@ -73,7 +73,7 @@ const MeetingRoom = () => {
   const isHost = Boolean(userdata?.id && hostId && hostId.toString() === userdata.id.toString())
 
   // Initialize WebRTC
-  const {localStream, remoteUsers, audioEnabled, videoEnabled, toggleAudio, toggleVideo, endMeeting, muteAll} = useWebRTC(meetingId, userdata, handleMeetingEnded, Boolean(meeting), isHost)
+  const {localStream, localScreenStream, remoteUsers, audioEnabled, videoEnabled, toggleAudio, toggleVideo, endMeeting, muteAll, isScreenSharing, toggleScreenShare} = useWebRTC(meetingId, userdata, handleMeetingEnded, Boolean(meeting), isHost)
 
    // Initialize Chat
    const {messages, sendMessage, unreadCount, isChatOpen, toggleChat} = useChat(meetingId, userdata)
@@ -146,10 +146,12 @@ const MeetingRoom = () => {
           {/* Video Grid Center */}
           <VideoGrid
           localStream={localStream}
+          localScreenStream={localScreenStream}
           localUser={userdata}
           remoteUsers={remoteUsers}
           audioEnabled={audioEnabled}
-          videoEnabled={videoEnabled} />
+          videoEnabled={videoEnabled}
+          isScreenSharing={isScreenSharing} />
 
           {/* In-Meeting Chat Drawer */}
           <ChatPanel 
@@ -191,6 +193,8 @@ const MeetingRoom = () => {
           onLeave={handleLeave}
           onEndMeeting={handleEndMeeting}
           onMuteAll={muteAll}
+          isScreenSharing={isScreenSharing}
+          onToggleScreenShare={toggleScreenShare}
           recordingState={recordingState}
           recordingTime={recordingTime}
           onStartRecording={startRecording}

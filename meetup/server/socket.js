@@ -141,6 +141,21 @@ export function setupSocketIO(io){
              })
         })
 
+        // Screen share started / stopped events
+        socket.on('screen-share-started', ({ roomId, streamId })=>{
+             socket.to(roomId).emit('user-started-screen-share', {
+                socketId: socket.id,
+                streamId,
+                user: currentUser,
+             })
+        })
+
+        socket.on('screen-share-stopped', ({ roomId })=>{
+             socket.to(roomId).emit('user-stopped-screen-share', {
+                socketId: socket.id,
+             })
+        })
+
         // Chat message event -> persist to DB & broadcast
         socket.on("send-message", async ({roomId, message}) => {
             try {
